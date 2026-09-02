@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Nightly NSE data ingestion.
+
+  Install (this is the one step that writes outside the project):
+
+      cp scripts/com.nse-screener.ingest.plist ~/Library/LaunchAgents/
+      launchctl load ~/Library/LaunchAgents/com.nse-screener.ingest.plist
+
+  Two run times, not one. NSE publishes the bhavcopy around 18:00 IST but is
+  not reliably punctual, and a laptop is not reliably awake. The 21:30 run is a
+  retry: the backfill is idempotent, so if 18:45 already got the day's file the
+  second run finds nothing to do and exits.
+
+  If the machine is asleep at both times, launchd runs the job once on wake. If
+  it is powered off, the job runs at next login -- and because the start date
+  comes from the store rather than a fixed lookback, that single run catches up
+  however many sessions were missed.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nse-screener.ingest</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/ritaanshu/Stock_screener/scripts/daily_ingest.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/ritaanshu/Stock_screener</string>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Hour</key><integer>18</integer>
+            <key>Minute</key><integer>45</integer>
+        </dict>
+        <dict>
+            <key>Hour</key><integer>21</integer>
+            <key>Minute</key><integer>30</integer>
+        </dict>
+    </array>
+
+    <!-- Don't fire on load: installing the job should not kick off a download. -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Deprioritised I/O and CPU; this is a background chore, not interactive. -->
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/ritaanshu/Stock_screener/logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ritaanshu/Stock_screener/logs/launchd.err.log</string>
+</dict>
+</plist>

@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nse-screener"
+version = "0.1.0"
+description = "NSE candlestick screener: bhavcopy store, pattern detectors, base-rate study, backtest"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "python-dateutil>=2.9",
+    "pandas_market_calendars>=5.0",
+    # Stage 0 acceptance criterion. Note: nsetools serves live quotes, not
+    # historical bhavcopy -- Stage 1 downloads archive files with requests.
+    "nsetools>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    # Reference implementation the detectors are pinned against in
+    # tests/test_talib_parity.py. Nothing in src/ imports it.
+    "ta-lib>=0.6",
+]
+ui = [
+    "streamlit>=1.40",
+    "plotly>=5.20",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Keeps the tmp_path fixture's directories inside the project rather than in
+# the system temp dir. pytest clears this between runs.
+addopts = "--basetemp=.scratch/pytest"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]

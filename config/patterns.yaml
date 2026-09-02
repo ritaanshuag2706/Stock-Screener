@@ -1,0 +1,109 @@
+# Candle settings, transcribed from TA-Lib's reference implementation.
+#
+# Values are TA_CandleDefaultSettings from ta_common/ta_global.c. The detector
+# conditions come from ta_CDLDOJI.c, ta_CDLHAMMER.c, ta_CDLINVERTEDHAMMER.c
+# and ta_CDLENGULFING.c.
+#
+# These are NOT fixed ratios of a candle's own range. Each is
+#
+#     factor x (average of some range over the prior `period` bars)
+#
+# so a "short body" means short for this stock lately. period: 0 is special --
+# it measures against the current bar instead of an average, which is how
+# "the shadow must be longer than the body" is expressed.
+#
+# TA-Lib's settings and where they are used here:
+#
+#   name              range      period  factor   used by
+#   BodyShort         real body    10     1.0     hammer, inverted_hammer
+#   BodyDoji          high-low     10     0.1     doji
+#   ShadowLong        real body     0     1.0     hammer, inverted_hammer
+#   ShadowVeryShort   high-low     10     0.1     hammer, inverted_hammer
+#   Near              high-low      5     0.2     hammer
+#
+# Detectors need `period` bars of warm-up; before that they return False.
+
+doji:
+  body_doji_period: 10
+  body_doji_factor: 0.1
+
+hammer:
+  body_short_period: 10
+  body_short_factor: 1.0
+  # The classic reading, matching inverted_hammer: the body sits in the upper
+  # third of the range and the lower shadow is at least twice the body. On 300
+  # liquid symbols since 2024 that is 4.35% of bars, against 1.83% for TA-Lib's
+  # shadow-average form.
+  rule: classic
+  body_bottom_min_frac: 0.33
+  min_lower_body_ratio: 2.0
+  # TA-Lib also demands the body sit within Near of the previous low. Off here
+  # so the classic rule is pure geometry; turning it on drops the rate to 1.29%.
+  # Whether it earns its place is a Stage 7 question.
+  require_near_low: false
+  # Used only when rule: talib
+  shadow_long_period: 0          # 0 -> compare against this bar's own body
+  shadow_long_factor: 1.0
+  shadow_very_short_period: 10
+  shadow_very_short_factor: 0.1
+  near_period: 5
+  near_factor: 0.2
+
+inverted_hammer:
+  # "classic" asks where the body sits inside its own range; "talib" compares
+  # the shadows to averages of the prior 10 bars. See single.py for both.
+  #
+  # Frequencies on 300 liquid symbols since 2024:
+  #   talib,   shadow factor 0.10   5.53% of bars
+  #   talib,   shadow factor 0.20  14.00%
+  #   classic, lower third          4.78%
+  #
+  # classic is both more faithful to the textbook and more selective. It
+  # accepts RELIANCE 2026-07-15 and 2026-07-16, which TA-Lib rejects -- one on
+  # the gap rule, one because its lower shadow is measured against the average
+  # range rather than its own.
+  rule: classic
+  body_short_period: 10
+  body_short_factor: 1.0
+  # classic settings
+  body_top_max_frac: 0.33      # whole body within the lower third of the range
+  min_upper_body_ratio: 2.0    # upper shadow at least twice the body
+  # talib settings, kept so rule: talib still works
+  shadow_long_period: 0
+  shadow_long_factor: 1.0
+  shadow_very_short_period: 10
+  shadow_very_short_factor: 0.1
+  # TA-Lib requires the body to gap below the previous body. The classic
+  # definition does not. 0.76% of bars when true, 5.53% when false under the
+  # talib rule -- a factor of 7.2, so this is not a small switch.
+  require_gap_down: false
+
+# TA-Lib's engulfing takes no parameters: it is purely a relationship between
+# two adjacent bodies, with no trend or size test. Nothing to configure.
+bullish_engulfing: {}
+
+# --- momentum family ------------------------------------------------------
+# A second signal family, added after the candlestick patterns measured flat at
+# Stage 7. Defaults are the conventional ones; nothing here has been tuned.
+
+breakout_20:
+  window: 20
+
+breakout_252:
+  window: 252
+
+rsi2_pullback:
+  trend_span: 200
+  rsi_period: 2
+  rsi_max: 10.0
+
+squeeze_release:
+  window: 20
+  lookback: 126
+  quantile: 0.25
+
+# Heikin-Ashi. `min_prior_red` is what makes this a turn rather than noise --
+# a single red bar inside an uptrend flips constantly.
+ha_flip_up:
+  min_prior_red: 2
+  require_no_lower_wick: false

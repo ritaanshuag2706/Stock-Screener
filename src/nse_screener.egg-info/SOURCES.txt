@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/nse_screener/__init__.py
+src/nse_screener/paths.py
+src/nse_screener.egg-info/PKG-INFO
+src/nse_screener.egg-info/SOURCES.txt
+src/nse_screener.egg-info/dependency_links.txt
+src/nse_screener.egg-info/requires.txt
+src/nse_screener.egg-info/top_level.txt
+src/nse_screener/apps/__init__.py
+src/nse_screener/backtest/__init__.py
+src/nse_screener/data/__init__.py
+src/nse_screener/patterns/__init__.py
+src/nse_screener/study/__init__.py
+tests/test_skeleton.py

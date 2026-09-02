@@ -1,0 +1,87 @@
+# Overrides applied on top of the base exchange calendar.
+# These always win. Add entries when reconciliation against price data
+# disagrees with the published schedule -- never edit the library or the data.
+#
+# Use NSE's TRADING holiday list, not the clearing/settlement list:
+# the clearing list includes days the market is actually open.
+#
+# Every entry below came from reconcile() against 2020-01-01..2026-07-29
+# (1,625 observed sessions). Evidence for each is noted. Entries marked
+# CONFIRM have solid date evidence but an unverified reason -- the reason is
+# documentation only and does not affect behaviour.
+
+# Days the base calendar thinks are sessions but the market was shut.
+# Evidence for all four: NSE's archive returned 404, and no file exists on
+# disk. These are genuine closures, not downloads we missed.
+closed:
+  - date: 2020-05-25
+    reason: unscheduled closure, likely Id-ul-Fitr  # CONFIRM reason
+    added: 2026-07-29
+  - date: 2024-01-22
+    reason: special holiday, likely Ayodhya Ram Mandir consecration  # CONFIRM reason
+    added: 2026-07-29
+  - date: 2024-11-20
+    reason: special holiday, likely Maharashtra assembly elections  # CONFIRM reason
+    added: 2026-07-29
+  - date: 2026-01-15
+    reason: unscheduled closure, reason unidentified  # CONFIRM reason
+    added: 2026-07-29
+
+# Days the base calendar thinks are holidays but the market traded.
+# This is the direction people forget. Muhurat trading happens every Diwali
+# and prints real prices -- miss it and your weekly candle boundaries shift.
+open:
+  # Full-volume session (89.6% of neighbouring median): the base calendar is
+  # simply wrong that this was a holiday.
+  - date: 2020-07-31
+    reason: full trading session, base calendar wrongly lists a holiday  # CONFIRM reason
+    added: 2026-07-29
+
+  # Union Budget special sessions, held when 1 February falls on a weekend.
+  # NSE publishes sec_bhavdata_full for these but NOT the bhavcopy zip, which
+  # 404s -- the backfill falls back automatically for dates listed here.
+  # Evidence: without them, 94-95% of symbols show prev_close disagreeing with
+  # the prior stored close on the following Monday.
+  - date: 2020-02-01
+    reason: Union Budget special session (Saturday)
+    added: 2026-07-29
+  - date: 2025-02-01
+    reason: Union Budget special session (Saturday)
+    added: 2026-07-29
+  - date: 2026-02-01
+    reason: Union Budget special session (Sunday)
+    added: 2026-07-29
+
+  # Saturday special live trading sessions run from NSE's disaster-recovery
+  # site. Full bhavcopy zips exist for these. Found via prev_close breaks on
+  # the following Monday affecting 400-600 symbols each.
+  - date: 2024-01-20
+    reason: special live trading session, DR site (Saturday)
+    added: 2026-07-29
+  - date: 2024-03-02
+    reason: special live trading session, DR site (Saturday)
+    added: 2026-07-29
+  - date: 2024-05-18
+    reason: special live trading session, DR site (Saturday)
+    added: 2026-07-29
+
+  # Diwali Muhurat: a one-hour session. Volume runs 24-30% of a normal day,
+  # which is the signature used to identify them.
+  - date: 2020-11-14
+    reason: Diwali Muhurat trading (Saturday)
+    added: 2026-07-29
+  - date: 2021-11-04
+    reason: Diwali Muhurat trading (23.8% of normal volume)
+    added: 2026-07-29
+  - date: 2022-10-24
+    reason: Diwali Muhurat trading (29.5% of normal volume)
+    added: 2026-07-29
+  - date: 2023-11-12
+    reason: Diwali Muhurat trading (Sunday)
+    added: 2026-07-29
+  - date: 2024-11-01
+    reason: Diwali Muhurat trading (30.1% of normal volume)
+    added: 2026-07-29
+  - date: 2025-10-21
+    reason: Diwali Muhurat trading (25.5% of normal volume)
+    added: 2026-07-29

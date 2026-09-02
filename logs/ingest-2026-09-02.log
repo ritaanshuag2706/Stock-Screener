@@ -1,0 +1,76 @@
+2026-09-02 12:13:19 IST  === ingest starting ===
+2026-09-02 12:13:21 IST  store's latest session is 2026-08-04; resuming from there
+12:13:22  range 2026-08-04..2026-09-02: 22 weekdays, 1 already stored, 0 known holidays
+12:13:22  fetching 21 days at 2.5s apart (~1 min)
+12:13:23  [1/21] 2026-08-05   2703 rows
+12:13:25  [2/21] 2026-08-06   2704 rows
+12:13:28  [3/21] 2026-08-07   2707 rows
+12:13:31  [4/21] 2026-08-10   2712 rows
+12:13:33  [5/21] 2026-08-11   2708 rows
+12:13:36  [6/21] 2026-08-12   2707 rows
+12:13:38  [7/21] 2026-08-13   2711 rows
+12:13:41  [8/21] 2026-08-14   2713 rows
+12:13:44  [9/21] 2026-08-17   2853 rows
+12:13:46  [10/21] 2026-08-18   2861 rows
+12:13:49  [11/21] 2026-08-19   2855 rows
+12:13:52  [12/21] 2026-08-20   2858 rows
+12:13:54  [13/21] 2026-08-21   2864 rows
+12:13:57  [14/21] 2026-08-24   2872 rows
+12:13:59  [15/21] 2026-08-25   2866 rows
+12:14:02  [16/21] 2026-08-26   2870 rows
+12:14:05  [17/21] 2026-08-27   2865 rows
+12:14:07  [18/21] 2026-08-28   2872 rows
+12:14:10  [19/21] 2026-08-31   2879 rows
+12:14:13  [20/21] 2026-09-01   2879 rows
+12:14:13  ... flushed 56059 rows
+12:14:15  [21/21] 2026-09-02  not published yet
+12:14:15  done: 20 loaded, 1 holidays, 0 failed
+12:14:15  store now holds:
+ year   rows  symbols  sessions      first       last   mb
+ 2020 418260     1819       252 2020-01-01 2020-12-31 12.6
+ 2021 435935     1968       248 2021-01-01 2021-12-31 13.8
+ 2022 475049     2110       248 2022-01-03 2022-12-30 14.8
+ 2023 499500     2278       246 2023-01-02 2023-12-29 15.3
+ 2024 541540     2404       249 2024-01-01 2024-12-31 17.5
+ 2025 586998     2643       249 2025-01-01 2025-12-31 18.6
+ 2026 432540     2954       165 2026-01-01 2026-09-01 13.9
+2026-09-02 12:14:15 IST  backfill finished
+store: 1657 sessions, latest 2026-09-01, 0 calendar mismatch(es)
+2026-09-02 12:14:16 IST  === ingest done ===
+2026-09-02 12:14:40 IST  === ingest starting ===
+2026-09-02 12:14:41 IST  store's latest session is 2026-09-01; resuming from there
+12:14:41  range 2026-09-01..2026-09-02: 2 weekdays, 1 already stored, 0 known holidays
+12:14:41  fetching 1 days at 2.5s apart (~0 min)
+12:14:42  [1/1] 2026-09-02  not published yet
+12:14:42  done: 0 loaded, 1 holidays, 0 failed
+12:14:42  store now holds:
+ year   rows  symbols  sessions      first       last   mb
+ 2020 418260     1819       252 2020-01-01 2020-12-31 12.6
+ 2021 435935     1968       248 2021-01-01 2021-12-31 13.8
+ 2022 475049     2110       248 2022-01-03 2022-12-30 14.8
+ 2023 499500     2278       246 2023-01-02 2023-12-29 15.3
+ 2024 541540     2404       249 2024-01-01 2024-12-31 17.5
+ 2025 586998     2643       249 2025-01-01 2025-12-31 18.6
+ 2026 432540     2954       165 2026-01-01 2026-09-01 13.9
+2026-09-02 12:14:42 IST  backfill finished
+store: 1657 sessions, latest 2026-09-01, 0 calendar mismatch(es)
+2026-09-02 12:14:43 IST  === ingest done ===
+2026-09-02 12:14:43 IST  another ingest is already running -- nothing to do
+2026-09-02 12:14:43 IST  === ingest starting ===
+2026-09-02 12:14:43 IST  store's latest session is 2026-09-01; resuming from there
+12:14:44  range 2026-09-01..2026-09-02: 2 weekdays, 1 already stored, 0 known holidays
+12:14:44  fetching 1 days at 2.5s apart (~0 min)
+12:14:44  [1/1] 2026-09-02  not published yet
+12:14:44  done: 0 loaded, 1 holidays, 0 failed
+12:14:44  store now holds:
+ year   rows  symbols  sessions      first       last   mb
+ 2020 418260     1819       252 2020-01-01 2020-12-31 12.6
+ 2021 435935     1968       248 2021-01-01 2021-12-31 13.8
+ 2022 475049     2110       248 2022-01-03 2022-12-30 14.8
+ 2023 499500     2278       246 2023-01-02 2023-12-29 15.3
+ 2024 541540     2404       249 2024-01-01 2024-12-31 17.5
+ 2025 586998     2643       249 2025-01-01 2025-12-31 18.6
+ 2026 432540     2954       165 2026-01-01 2026-09-01 13.9
+2026-09-02 12:14:44 IST  backfill finished
+store: 1657 sessions, latest 2026-09-01, 0 calendar mismatch(es)
+2026-09-02 12:14:44 IST  === ingest done ===
