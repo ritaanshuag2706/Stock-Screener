@@ -1,0 +1,22 @@
+# Runtime dependencies for the deployed Streamlit app.
+#
+# Streamlit Community Cloud reads this file and ignores pyproject.toml, so the
+# UI extras have to be repeated here rather than referenced.
+#
+# Deliberately NOT listed:
+#   .          installing the package breaks paths.py -- see streamlit_app.py
+#   ta-lib     needs a C library built first; the build fails on Cloud. It is a
+#              test-only dependency (tests/test_talib_parity.py); nothing in
+#              src/ imports it.
+#   nsetools   a Stage 0 leftover that serves live quotes, not archive files.
+#              Nothing uses it, and it drags in an old dependency set.
+
+streamlit>=1.40
+plotly>=5.20
+
+pandas>=2.2
+pyarrow>=16
+PyYAML>=6.0
+python-dateutil>=2.9
+pandas_market_calendars>=5.0
+requests>=2.31
