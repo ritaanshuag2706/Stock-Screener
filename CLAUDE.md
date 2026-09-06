@@ -493,6 +493,51 @@ the universe. `LIQGRWBEES` -- a liquid fund whose NAV only rises -- printed a
 double bottom at RSI 99.99. Nothing excludes them, and a chart pattern on a
 money-market NAV is not a chart pattern.
 
+## The decision sheet is filled by `tradeplan.py`, and filling it is not evidence
+
+`tradeplan.py` plus `apps/views/decision.py`. The screener says a pattern fired;
+this says where the stop goes, what the target is, whether the setup clears the
+checklist's own reward-to-risk gate, and how many shares to buy. Rows 7 to 13 of
+the SMM checklist and the whole arithmetic block of the Excel sheet.
+
+`size()` is checked against the one filled column the owner's sheet ships --
+close 269, stop 266, targets 306 and 308 -- and reproduces its risk of 3, rewards
+of 37 and 39, and ratios of 12.33 and 13 exactly.
+
+Three decisions in there matter more than the arithmetic:
+
+* **The target never comes from the stop.** Defining it as three times the risk
+  would make every setup clear the sheet's "R:R above 3" gate by construction --
+  a tautology wearing a filter's clothes. Both targets are confirmed swing highs,
+  which is the sheet's own "Major Resistance ... previous tops or resistances".
+  A signal with no structure above it gets no target and no plan: on
+  2026-09-01, 67 of 548 signals, nearly all breakouts at new highs, which have
+  nothing to aim at by definition.
+* **The sheet sizes positions twice and reconciles neither.** Row 29 caps shares
+  by the 2% risk budget, row 32 sets them from a fixed investment. On its own
+  example those are 666 and 74. Both are reported, `shares` is the smaller, and
+  `binding` names which one is in charge. On live data the investment limit
+  binds essentially always, which means the 2% risk cap is not the constraint
+  anyone thinks it is.
+* **`score` is confluence, not a forecast.** Candidates are ranked by how many of
+  the six checklist rows agree, because that is the sheet's own logic and it is
+  reproducible. Nothing here has measured whether confluence predicts anything,
+  and Stage 7 measured every individual component within 0.35 percentage points
+  of a randomly chosen bar. The page says so on its face.
+
+**A filled sheet is persuasive in a way a scan table is not, and that is the
+risk.** It shows R:R of 4.83 and a 28% ROI in rupees, next to a stop and a
+target that look considered. Stage 9 backtested a planned 3:1 over 2020-2026
+with real costs and measured -0.17R. `rr_min` is what the trade aims at. The
+distance between that and what such trades return is the entire finding of this
+project, and the page carries that warning inline rather than in a footnote.
+
+One Streamlit trap worth knowing: **magic renders any bare expression at a
+page's top level**, and an attribute docstring -- the `NAME = value` followed by
+`"""..."""` convention used everywhere else in this repo -- is one. Written that
+way in a page file it appears as body text above the title. Use `#` comments in
+`apps/views/`.
+
 ## The owner's method is documented, and it disagrees with the code in places
 
 Two source documents define the method the screener is meant to serve: an SMM
