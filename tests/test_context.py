@@ -170,7 +170,17 @@ def test_needs_a_date_column_for_multi_symbol():
 
 # --- indicators, against TA-Lib ---------------------------------------------
 
-talib = pytest.importorskip("talib", reason="TA-Lib not installed")
+@pytest.fixture(scope="module")
+def talib():
+    """TA-Lib is a test-only dependency and needs a C library built first, so it
+    is legitimately absent in some environments.
+
+    Guarding the one test that uses it, rather than the module. An
+    `importorskip` at module scope raises during collection, which took the
+    other 28 tests in this file down with it -- they reported as "no tests
+    collected" rather than as a failure, so the context layer was running
+    unverified wherever TA-Lib would not build."""
+    return pytest.importorskip("talib", reason="TA-Lib not installed")
 
 
 def trending_bars(n=900, seed=3):
@@ -189,22 +199,22 @@ def trending_bars(n=900, seed=3):
 @pytest.mark.parametrize(
     "column,reference",
     [
-        ("rsi_14", lambda c, h, low: talib.RSI(c, 14)),
-        ("stoch_k", lambda c, h, low: talib.STOCH(h, low, c, 14, 3, 0, 3, 0)[0]),
-        ("stoch_d", lambda c, h, low: talib.STOCH(h, low, c, 14, 3, 0, 3, 0)[1]),
-        ("macd", lambda c, h, low: talib.MACD(c, 12, 26, 9)[0]),
-        ("macd_signal", lambda c, h, low: talib.MACD(c, 12, 26, 9)[1]),
-        ("atr_pct", lambda c, h, low: talib.ATR(h, low, c, 14) / c * 100),
-        ("bb_pct_b", lambda c, h, low: (
+        ("rsi_14", lambda c, h, low, talib: talib.RSI(c, 14)),
+        ("stoch_k", lambda c, h, low, talib: talib.STOCH(h, low, c, 14, 3, 0, 3, 0)[0]),
+        ("stoch_d", lambda c, h, low, talib: talib.STOCH(h, low, c, 14, 3, 0, 3, 0)[1]),
+        ("macd", lambda c, h, low, talib: talib.MACD(c, 12, 26, 9)[0]),
+        ("macd_signal", lambda c, h, low, talib: talib.MACD(c, 12, 26, 9)[1]),
+        ("atr_pct", lambda c, h, low, talib: talib.ATR(h, low, c, 14) / c * 100),
+        ("bb_pct_b", lambda c, h, low, talib: (
             (c - talib.BBANDS(c, 20, 2, 2, 0)[2])
             / (talib.BBANDS(c, 20, 2, 2, 0)[0] - talib.BBANDS(c, 20, 2, 2, 0)[2]))),
     ],
 )
-def test_indicator_matches_talib(column, reference):
+def test_indicator_matches_talib(column, reference, talib):
     b = trending_bars()
     mine = annotate(b)[column].to_numpy(float)
     c, h, low = (b[k].to_numpy(float) for k in ("close", "high", "low"))
-    ref = reference(c, h, low)
+    ref = reference(c, h, low, talib)
     both = ~np.isnan(mine) & ~np.isnan(ref)
     assert both.sum() > 200
     # 0.05 covers the residue at the very first unmasked bar, where the two

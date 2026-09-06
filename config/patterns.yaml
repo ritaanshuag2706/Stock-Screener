@@ -107,3 +107,134 @@ squeeze_release:
 ha_flip_up:
   min_prior_red: 2
   require_no_lower_wick: false
+
+# --- swing family ---------------------------------------------------------
+# Fibonacci retracement and divergence. Both read *confirmed* swing pivots, so
+# both are late by `right` bars by construction -- see patterns/_swings.py for
+# why that lateness is the price of the signal being real. left/right are the
+# pivot geometry: how many bars either side of an extreme must be lower (or
+# higher) for it to count as a swing.
+#
+# Nothing here has been tuned. These are the conventional defaults, chosen
+# before any of it was measured, which is the only honest place to start.
+#
+# Frequencies on 921,061 bars, 1,520 liquid symbols, 2024-01-01 -> 2026-09-01:
+#
+#   fib_retracement             4.69%   between breakout_20 and inverted_hammer
+#   bullish_divergence          0.84%   two confirmed swings, so rare by design
+#   hidden_bullish_divergence   0.75%
+#
+# For scale, on the same bars: doji 14.96%, ha_flip_up 9.82%, breakout_252 0.55%.
+# All three keep every hit through classify() -- none is absorbed by a broader
+# signal, which is the failure squeeze_release had.
+
+fib_retracement:
+  levels: [0.382, 0.5, 0.618]
+  # A fraction of the leg, not of price -- so the band is the same slice of the
+  # move on a wide swing as on a narrow one.
+  tolerance: 0.02
+  left: 5
+  right: 5
+  # Legs smaller than this have every Fibonacci level inside the spread.
+  min_leg_pct: 5.0
+  # A leg whose pivots printed months ago is not "the retracement".
+  max_bars_since: 60
+
+bullish_divergence:
+  # rsi or macd_hist. Both come from context.py, so the detector and the chart
+  # column cannot disagree about the same bar.
+  oscillator: rsi
+  rsi_period: 14
+  left: 5
+  right: 5
+  min_bars_between: 5
+  max_bars_between: 60
+
+hidden_bullish_divergence:
+  oscillator: rsi
+  rsi_period: 14
+  left: 5
+  right: 5
+  min_bars_between: 5
+  max_bars_between: 60
+
+# --- grades, not detectors --------------------------------------------------
+# How the decision checklist reads a number the detectors already produce.
+# These sit at the top level rather than under a pattern's key on purpose:
+# `params_for()` passes everything nested under a registered name straight to
+# that detector as keyword arguments, so a grade threshold parked there would
+# reach the detector as an unexpected kwarg.
+#
+# The checklist grades a retracement "healthy" up to 50% and "watchful" at
+# 61.8% or more, and says nothing about the band between. That band is labelled
+# `deep` rather than being folded into either side -- see fib.retracement_grade.
+
+fib_grade:
+  healthy_max: 0.50
+  watchful_min: 0.618
+
+# --- chart patterns -------------------------------------------------------
+# Published definitions, not invented ones. See patterns/chart.py for the
+# citations and, more importantly, for where a source stopped being specific
+# and a number had to be chosen.
+#
+# From Lo, Mamaysky and Wang (2000), "Foundations of Technical Analysis",
+# Journal of Finance 55(4): the 1.5% tolerance on matched extrema, the 22-day
+# minimum between the two tops of a double top, and the 38-day span limit
+# (their rolling window was l = 35 plus d = 3).
+
+inverted_head_shoulders:
+  tolerance: 0.015      # theirs
+  max_span: 38          # theirs
+  left: 5
+  right: 5
+
+double_bottom:
+  tolerance: 0.015      # theirs
+  min_separation: 22    # theirs, from Edwards and Magee
+  left: 5
+  right: 5
+
+# Bulkowski gives these shapes words and no numbers -- "a rounded bowl", "not
+# sharp or pointed", "be flexible". Everything below is therefore a choice, and
+# is the first thing to vary if the family is ever measured.
+rounding_bottom:
+  window: 60            # ~3 months; he says "usually over many months"
+  rim: 5
+  min_depth_pct: 10.0
+  min_r2: 0.70          # rejects noisy windows; it does NOT reject a V -- a hard
+                        # V fits a parabola at r2 0.94, so this cannot be the
+                        # roundness test on its own
+  max_base_frac: 0.25   # it is: the middle third may span only this much of the
+                        # depth, measured on closes. Under realistic noise a
+                        # bowl sits at 0.09-0.18 and a V at 0.31-0.37, so this
+                        # separates them; it admits about the flattest 5% of
+                        # real 60-bar windows.
+  vertex_band: 0.25     # the low must sit in the middle half of the window
+
+cup_and_handle:
+  window: 60
+  rim: 5
+  handle: 10            # he gives a 1-week minimum and no maximum; this is fixed
+  min_depth_pct: 10.0
+  min_r2: 0.70
+  max_base_frac: 0.25
+  vertex_band: 0.25
+  max_handle_retrace: 0.33
+
+flag_breakout:
+  pole: 10
+  # The ASSUMED consolidation length, not Bulkowski's 3-week maximum. Measuring
+  # a short flag's range over a 15-bar window pulls pole bars into it: 59 hits
+  # at 8 bars against 3 at 15, on the same 921,061 bars.
+  flag: 8
+  # "Unusually steep", given a meaning: 15% is the 95th percentile of 10-bar
+  # moves across this universe.
+  min_pole_pct: 15.0
+  max_flag_frac: 0.5
+
+# The PAPA sheet defines this one operationally, so nothing here is invented:
+# price re-enters above the broken level and the follow-up candle closes there.
+fake_breakdown:
+  lookback: 20
+  recovery: 5

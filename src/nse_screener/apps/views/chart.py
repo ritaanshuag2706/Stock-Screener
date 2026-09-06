@@ -46,7 +46,16 @@ SHAPE = {
     "hammer": ("triangle-up", "below"),
     "bullish_engulfing": ("circle", "below"),
     "doji": ("diamond", "above"),
+    # The swing family. Distinct marks rather than the fall-through, but chosen
+    # for separation by eye -- not measured the way the two hues were.
+    "fib_retracement": ("square", "below"),
+    "bullish_divergence": ("cross", "below"),
+    "hidden_bullish_divergence": ("pentagon", "below"),
 }
+# Everything not listed falls through to circle-above, which means the four
+# momentum signals and ha_flip_up currently render identically to each other.
+# That predates the swing family and is a real defect by this file's own rule:
+# with one hue per direction, shape is the only channel carrying identity.
 
 
 def style_for(name: str) -> tuple[str, str, str]:

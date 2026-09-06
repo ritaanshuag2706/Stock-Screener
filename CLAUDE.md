@@ -342,6 +342,189 @@ at 70 where it outranked everything and quietly became the label on most flagged
 bars. **Specificity ranks how narrow a signal is, and a smoothed-trend flag is not
 narrow** -- the number is not a measure of how interesting the signal seems.
 
+## The swing family reads pivots, and pivots are where lookahead hides
+
+`patterns/_swings.py`, `patterns/fib.py`, `patterns/divergence.py`. Added because
+the owner's decision sheets have a "Fib Retrace" row and a "Divergence" row, and
+neither existed here.
+
+**The pivot is the whole problem.** A swing high at bar `p` is "the highest of
+the `left` bars before and the `right` bars after", and those right-hand bars
+have not printed yet. Every charting package's divergence indicator repaints for
+this reason: it draws the pivot back at `p` the moment `p + right` arrives, so
+the line appears to have been there all along. Backtest that and the result is
+not wrong by a little.
+
+So nothing in `_swings.py` is placed at the pivot bar. Everything is placed at
+the **confirmation** bar -- the first bar on which a live trader could have known
+the pivot existed. There are no negative shifts in the file. The consequence is
+deliberate: the most recent usable pivot is always at least `right` bars old, and
+these detectors are late by construction. That lateness is the price of the
+signal being real, not a lag to tune away.
+
+`tests/test_swings.py`, `test_fib.py` and `test_divergence.py` each carry a
+**prefix-invariance** test: the answer at bar `t` computed from the first `t+1`
+bars must equal the answer at bar `t` computed from the whole history. That is
+what "no lookahead" actually means, and it catches the property however the
+arithmetic is later rearranged. If you touch this family, keep those three.
+
+Details worth knowing:
+
+* **Pivots are strict on the left, non-strict on the right.** With `>=` on both
+  sides every bar of a flat series is simultaneously a pivot high and a pivot
+  low -- which is how a swing detector ends up firing on a suspended stock.
+* **`_swings._rolling` reindexes; the other rolling helpers in this project do
+  not.** `groupby().rolling()` returns rows grouped rather than in input order,
+  and pandas then aligns on labels -- so on a frame sorted by (date, symbol) the
+  arithmetic silently compares one symbol's window to another symbol's bar.
+  Everything else is called from `detect_by_symbol`, which sorts by (symbol,
+  date) first and never notices. These are also called directly.
+* **A divergence is an event, not a state.** It fires only on the bar confirming
+  the second pivot. Held True until the next pivot it would fire on thirty
+  consecutive bars, turning one observation into thirty and telling Stage 7
+  something false about how often the thing happens.
+* **The bearish readings are exported and deliberately not registered**, exactly
+  like `heikin_ashi.flip_down`. Every registered signal here is a long entry and
+  Stages 7 and 9 score a signal by whether an upside target is hit before a
+  downside stop; a bearish signal measured that way reports a number that reads
+  like a hit rate and is not one.
+* **`fib_retracement`'s tolerance is a fraction of the leg, not of price.** A
+  fixed percentage of price is a different-sized band on a 40-rupee leg than a
+  400-rupee one, so one setting would be strict on wide swings and meaningless
+  on narrow ones.
+* Divergence takes its oscillator from `context.py` rather than reimplementing
+  it, so the detector and the RSI column on the chart cannot disagree about the
+  same bar. `context.macd()` was extracted for this; the import is deferred to
+  the call because `context` imports `patterns._geometry`.
+
+**A trigger and a grade are different questions, and the checklist wants both.**
+The owner's SMM checklist does not use either of these as an entry. It uses them
+to *grade* a setup you already have: a retracement up to 50% is healthy and
+61.8% or more is watchful; a divergence pointing the way you are trading is
+encouragement and one pointing the other way is a caution. So `fib.py` and
+`divergence.py` each carry a second entry point -- `retracement_grade()` and
+`agreement()` -- reading the same primitives the detectors read.
+
+Two consequences worth holding on to:
+
+* **`agreement()` is why the bearish divergences had to exist.** On a long, the
+  divergence that matters to the checklist is the *bearish* one. Nothing
+  registers them, and they are not dead code.
+* **The checklist leaves a gap and the code does not fill it silently.** It
+  names "up to 50%" and "61.8% or more" and says nothing about the band
+  between. That band is labelled `deep` rather than folded into either side.
+  Measured on 568,534 bars since 2025: healthy 54.6%, deep 13.2%, watchful
+  32.1%. Folding `deep` into `healthy` would move a sixth of all graded bars
+  across the line that decides whether a setup is worth taking, which is a
+  change of method rather than a rounding choice.
+* Grade thresholds live at the **top level** of `patterns.yaml`, not under a
+  pattern's key. `params_for()` passes everything nested under a registered name
+  straight to that detector as keyword arguments, so a threshold parked there
+  arrives as an unexpected kwarg and the detector raises.
+
+**None of this has been measured.** Stage 7 and Stage 9 have not been run on the
+swing family. Given that three families in a row have measured flat -- and that
+momentum's hit-rate lift replicated out of sample and *still* lost 64-92% -- the
+prior on a fourth is poor, and adding a detector is not evidence about anything.
+Reproduce the frequencies in `config/patterns.yaml`, then run
+`study/base_rates.py` before believing a word of it.
+
+## The chart patterns are built from published definitions, and three are too rare to measure
+
+`patterns/chart.py`. The SMM checklist's row 4 -- head and shoulders, double
+tops and bottoms, rounding turns, cup and handle, flags, failed breakouts. Six
+registered long signals, five bearish mirrors exported and unregistered as usual.
+
+**Where each rule came from is in the file, and it matters which.** Lo, Mamaysky
+and Wang (2000) formalise head-and-shoulders and double tops as conditions on a
+sequence of five consecutive local extrema, with real numbers -- a 1.5 percent
+tolerance on matched shoulders, 22 trading days minimum between the two tops,
+and a 38-day window so only patterns *completed* inside it count. Those are
+theirs. Bulkowski supplies the rest, and supplies no numbers at all: "a rounded
+bowl", "not sharp or pointed", "be flexible", "allow variations". Every
+threshold on the rounding, cup and flag detectors is therefore a choice, and the
+docstrings say which ones.
+
+Two mistakes worth keeping, because both produced a detector that looked fine
+and fired essentially never:
+
+* **A parabola fit is not a test of roundness.** A hard V -- two straight legs
+  meeting at a point, exactly what Bulkowski excludes -- fits a quadratic at
+  r2 = 0.937 against a true bowl's 1.000. No r2 threshold loose enough for real
+  data rejects it. What separates them is how much of the fall the *middle* of
+  the window spans: bowl 0.09-0.18, V 0.31-0.37 under realistic noise. That is
+  `max_base_frac`, and it is the condition doing the work.
+* **Calibrating a threshold on noiseless synthetic data.** The same flatness
+  test was first measured on high-low and tuned against a synthetic bowl whose
+  bars had no range at all. On real bars the daily high-low counts as unevenness
+  in the base, the condition passed 0.74% of bars against a median ratio of
+  0.97, and `rounding_bottom` fired **once in 921,061 bars**. Fixed by measuring
+  on closes -- the same series the parabola is fitted to. If a new detector here
+  fires almost never, suspect a units or noise mismatch before suspecting the
+  market.
+
+Same shape of error in the flag: `flag` was set to Bulkowski's three-week
+*maximum* and used as an exact length, so a short flag's range was measured over
+a window that still contained pole bars. Eight bars gives 59 hits where fifteen
+gives 3, on identical data.
+
+Frequencies on 921,061 bars, 1,520 liquid symbols, 2024-01-01 -> 2026-09-01:
+
+    signal                     hits    % bars   per symbol-year
+    fake_breakdown           28,243    3.066%          7.67
+    double_bottom             1,683    0.183%          0.46
+    inverted_head_shoulders     970    0.105%          0.26
+    flag_breakout                46    0.005%          0.01
+    cup_and_handle               39    0.004%          0.01
+    rounding_bottom              33    0.004%          0.01
+
+**The bottom three cannot be measured by this project, and that is the finding.**
+Detecting a 2-point lift on a 26% base rate at |z|>3 needs roughly 4,300
+occurrences. Over the full 2020-2026 history `fake_breakdown` and
+`double_bottom` reach that or come close; `rounding_bottom`, `cup_and_handle`
+and `flag_breakout` would yield around a hundred events each. Stage 7 can return
+a number for them and the number will be noise. Do not loosen their thresholds
+to fix this -- that trades a signal nobody can measure for a different signal
+nobody can measure, and the Stage 7 write-up above is what happens when a
+promising-looking cell gets acted on.
+
+One data observation from the live scan: ETFs sit in the EQ series and are in
+the universe. `LIQGRWBEES` -- a liquid fund whose NAV only rises -- printed a
+double bottom at RSI 99.99. Nothing excludes them, and a chart pattern on a
+money-market NAV is not a chart pattern.
+
+## The owner's method is documented, and it disagrees with the code in places
+
+Two source documents define the method the screener is meant to serve: an SMM
+decision checklist (13 numbered checks behind a two-step trend filter) and a
+PAPA sheet (18 named trade setups, each with its trigger, stop and target). They
+are third-party course material -- implement the rules, do not redistribute the
+documents.
+
+The checklist is more specific than anything previously in this repo, and four
+of its statements conflict with what is built. None has been acted on, because
+each is a decision about method rather than a defect:
+
+* **It reads an inverted hammer as bearish at a top** -- what most references
+  call a shooting star. `inverted_hammer` is registered here as
+  `direction="bullish"`, and `test_shooting_star_is_gone` pins the removal of
+  the bearish form. Stage 7 measured the bullish reading, so changing the
+  direction silently would invalidate a measured result.
+* **Its EMA ribbon is 5/13/26.** `context.py` uses 5/13/25.
+* **Its entry gate is reward-to-risk above 3**, computed off a hand-placed stop
+  and target. That is a rule, and it is codeable, but it gates on *planned* R:R
+  -- Stage 9 measured planned 3:1 delivering an average of -0.17R.
+* **Its first step is a higher-timeframe trend filter** (monthly or weekly
+  "tide" agreeing with a weekly or daily "wave"). This is Elder's double screen,
+  and it is Stage 5 -- skipped as unproven. It is now specified precisely enough
+  to build.
+
+Not built, and each a sizeable job: the chart-pattern family the checklist
+leans on (double bottom, head and shoulders, flags, cup and handle), and the
+PAPA setups themselves. Several PAPA rows also use terms the sheets never
+define -- `BKT`, `BKP`, "Ungali Setup", "BBC", and "Weapon" -- so those setups
+cannot be implemented from the documents alone.
+
 ## Project shape
 
 Built in numbered stages from a plan the owner wrote. Stages 0-4, 6 and 7 are done:

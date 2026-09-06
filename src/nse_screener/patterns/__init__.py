@@ -4,7 +4,15 @@ Importing this package registers every detector, so `registry.names()` is
 populated by the time anyone asks.
 """
 
-from . import double, heikin_ashi, momentum, single  # noqa: F401  (registration)
+from . import (  # noqa: F401  (registration)
+    chart,
+    divergence,
+    double,
+    fib,
+    heikin_ashi,
+    momentum,
+    single,
+)
 from .registry import (
     Entry,
     by_specificity,

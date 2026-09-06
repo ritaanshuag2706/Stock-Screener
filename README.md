@@ -55,7 +55,7 @@ re-download.
 | Path | Contents |
 | --- | --- |
 | `src/nse_screener/data/` | bhavcopy download, parquet store |
-| `src/nse_screener/patterns/` | registry, candlestick + momentum + Heikin-Ashi families |
+| `src/nse_screener/patterns/` | registry, candlestick + momentum + Heikin-Ashi + swing + chart-pattern families |
 | `src/nse_screener/screener.py` | universe eligibility (history, gaps, liquidity) + the scan |
 | `src/nse_screener/apps/` | CLI entry points; `apps/views/` are the app pages |
 | `src/nse_screener/study/` | `base_rates.py` — the Stage 7 measurement |

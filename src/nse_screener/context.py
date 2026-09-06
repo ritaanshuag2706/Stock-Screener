@@ -178,6 +178,31 @@ def rsi(close: pd.Series, by: pd.Series | None = None, period: int = 14) -> pd.S
     return 100 - 100 / (1 + avg_gain / avg_loss)
 
 
+def macd(
+    close: pd.Series,
+    by: pd.Series | None = None,
+    fast: int = 12,
+    slow: int = 26,
+    signal: int = 9,
+) -> tuple[pd.Series, pd.Series]:
+    """The MACD line and its signal line, unmasked.
+
+    Exposed for the same reason `atr` is: something outside the context table
+    needs the raw series. `patterns/divergence.py` reads the histogram at swing
+    pivots, and it has to be *this* MACD -- a second implementation would let
+    the chart and the detector disagree about the same bar, which is the kind of
+    discrepancy that costs an afternoon.
+
+    `annotate` masks both lines until there is enough history; the raw form is
+    returned here because a caller may want to do its own masking.
+    """
+    line = (
+        _ewm(close, by, span=fast, adjust=False)
+        - _ewm(close, by, span=slow, adjust=False)
+    )
+    return line, _ewm(line, by, span=signal, adjust=False)
+
+
 def atr(
     df: pd.DataFrame, by: pd.Series | None = None, period: int = 14
 ) -> pd.Series:
@@ -286,11 +311,7 @@ def annotate(
     out["stoch_k"] = _rolling_mean(raw_k, by, stoch_smooth)
     out["stoch_d"] = _rolling_mean(out["stoch_k"], by, stoch_smooth)
 
-    macd_line = (
-        _ewm(close, by, span=macd_fast, adjust=False)
-        - _ewm(close, by, span=macd_slow, adjust=False)
-    )
-    signal = _ewm(macd_line, by, span=macd_signal, adjust=False)
+    macd_line, signal = macd(close, by, macd_fast, macd_slow, macd_signal)
     enough_macd = n >= macd_slow * EMA_WARMUP_MULTIPLE
     out["macd"] = macd_line.where(enough_macd)
     out["macd_signal"] = signal.where(enough_macd)
