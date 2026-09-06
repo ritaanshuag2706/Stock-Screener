@@ -28,4 +28,6 @@ st.navigation([
     st.Page(VIEWS / "scan.py", title="Pattern scan", icon=":material/search:",
             default=True),
     st.Page(VIEWS / "chart.py", title="Chart", icon=":material/candlestick_chart:"),
+    st.Page(VIEWS / "decision.py", title="Decision sheet",
+            icon=":material/fact_check:"),
 ]).run()
